@@ -11,13 +11,16 @@ const router = express.Router();
 const articles = require('../controllers/articles');
 const catchAsync = require('../utils/catchAsync');
 const { validateArticle } = require('../middleware');
-const Article = require('../models/article');
 
 router
   .route('/')
-  .get(articles.index)
-  .post(validateArticle, articles.createArticle);
+  .get(catchAsync(articles.index))
+  .post(validateArticle, catchAsync(articles.createArticle));
 
-router.route('/:id').get(articles.showArticle).put(articles.updateArticle);
+router
+  .route('/:id')
+  .get(catchAsync(articles.showArticle))
+  .put(validateArticle, catchAsync(articles.updateArticle))
+  .delete(catchAsync(articles.deleteArticle));
 
 module.exports = router;

@@ -11,8 +11,11 @@ const path = require('path');
 // const helmet = require('helmet');
 const methodOverride = require('method-override');
 
+const admin = require('firebase-admin');
+const serviceAccount = require('./cc-stuntcare-demo-f23bdc5f608a.json');
+admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+
 const ExpressError = require('./utils/ExpressError');
-const Article = require('./models/article'); // Assuming the file is named article.js
 
 // const userRoutes = require('./routes/users');
 const articleRoutes = require('./routes/articles');
@@ -26,7 +29,6 @@ const app = express();
 
 app.use(express.urlencoded({ extended: true })); // parse the req.body
 app.use(methodOverride('_method'));
-app.use(express.static(path.join(__dirname, 'public')));
 
 // const sessionConfig = {
 //   name: 'session',
@@ -119,7 +121,7 @@ app.use((err, req, res, next) => {
   if (!err.message) {
     err.message = 'Oh no, Something Went Wrong!';
   }
-  res.status(status).send(err);
+  res.status(status).json({ status, message });
 });
 
 app.listen(3000, () => {

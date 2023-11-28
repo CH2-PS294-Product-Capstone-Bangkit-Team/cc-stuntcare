@@ -1,136 +1,151 @@
-const admin = require('firebase-admin');
-const serviceAccount = require('../cc-stuntcare-demo-f23bdc5f608a.json');
-admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
 const Firestore = require('@google-cloud/firestore');
-const { Timestamp } = require('@google-cloud/firestore');
+const serviceAccount = require('../cc-stuntcare-demo-f23bdc5f608a.json');
 
 const db = new Firestore({
   projectId: serviceAccount.project_id,
   keyFilename: './cc-stuntcare-demo-f23bdc5f608a.json',
 });
 
+const articleCollection = db.collection('articles');
+
 module.exports.index = async (req, res) => {
-  try {
-    const articleDoc = await db.collection('articles').get();
-    const articles = articleDoc.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+  const articleDoc = await articleCollection.get();
+  const articles = articleDoc.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
 
-    // add filter feature
+  // add filter feature
 
-    if (!articles.length) {
-      res.status(404).json({
-        message: 'Articles is still empty',
-        data: {
-          articles,
-        },
-      });
-    }
-
-    res.status(200).json({
-      message: 'Articles data received successfully',
+  if (!articles.length) {
+    return res.status(404).json({
+      message: 'Articles is still empty',
       data: {
         articles,
       },
     });
-  } catch (error) {
-    console.error('Error retrieving articles:', error);
-    res.status(500).json({ status: 'error', error: 'Internal Server Error' });
   }
+
+  res.status(200).json({
+    message: 'Articles data received successfully',
+    data: {
+      articles,
+    },
+  });
 };
 
 // POST /articles
 module.exports.createArticle = async (req, res) => {
-  try {
-    const { title, description } = req.body;
+  const { title, description, imgUrl } = req.body;
+  let likes = 0;
+  const createdAt = new Date().toISOString();
+  const localCreatedAt = new Date(createdAt).toLocaleString();
+  const author = 'dr. afrizal'; // soon update reference to doctor.name
 
-    const newArticle = {
-      ...req.body,
-      ownerId: 'reffromdoctor',
-      ownerName: 'dr. afrizal',
-      createdAt: Timestamp.now().toDate(),
-      imgUrl: 'urlfromstorage',
-    };
+  const newArticle = {
+    ...req.body,
+    likes: likes,
+    localCreatedAt,
+    author,
+  };
 
-    // ADD CONDITIONAL IF SUCCESS IF ID EXISTS ETC.
-
-    const response = await db.collection('articles').add(newArticle);
-    const articleId = response.id;
-    res.status(201).json({
-      message: 'Articles successfully created',
-      data: {
-        article: {
-          id: articleId,
-          ...newArticle,
-        },
+  const response = await articleCollection.add(newArticle);
+  const articleId = response.id;
+  res.status(201).json({
+    message: 'Articles successfully created',
+    data: {
+      article: {
+        id: articleId,
+        ...newArticle,
       },
-    });
-  } catch (error) {
-    console.error('Error creating article:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
+    },
+  });
 };
 
 module.exports.showArticle = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const articleRef = db.collection('articles').doc(id);
-
-    // Mendapatkan data dari dokumen
-    const articleDoc = await articleRef.get();
-
-    // Memeriksa apakah dokumen ada
-    if (!articleDoc.exists) {
-      return res.status(404).json({
-        message: 'Article not found',
-        data: null,
-      });
-    }
-
-    // Mengirimkan data dokumen sebagai respons
-    res.status(200).json({
-      message: 'Article data received successfully',
-      data: {
-        id: articleDoc.id,
-        ...articleDoc.data(),
-      },
-    });
-  } catch (error) {
-    console.error('Error retrieving article:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-};
-
-module.exports.updateArticle = async (req, res) => {
   const { id } = req.params;
-  const articleRef = db.collection('articles').doc(id);
+  const articleDoc = articleCollection.doc(id);
+  const article = await articleDoc.get();
 
-  if (!articleDoc.exists) {
+  if (!article.exists) {
     return res.status(404).json({
       message: 'Article not found',
       data: null,
     });
   }
 
-  const { title, description } = req.body;
-  await articleRef.update({
-    title: title,
-  });
-
   res.status(200).json({
-    message: 'Article update successfully',
-    // data: {
-    //   id: articleRef.id,
-    //   ...articleRef.data(),
-    // },
+    message: 'Article data received successfully',
+    data: {
+      id: article.id,
+      ...article.data(),
+    },
   });
 };
 
-module.exports.deleteCampground = async (req, res) => {
+module.exports.updateArticle = async (req, res) => {
   const { id } = req.params;
-  const articleRef = db.collection('articles').doc(id);
+  const articleDoc = articleCollection.doc(id);
+  const article = await articleDoc.get();
 
-  // if exist delete, if not res 404
+  if (!article.exists) {
+    return res.status(404).json({
+      message: 'Article not found',
+      data: null,
+    });
+  }
+
+  const { title, description, imgUrl } = req.body;
+  const updatedAt = new Date().toISOString();
+  const localUpdatedAt = new Date(updatedAt).toLocaleString();
+
+  const updateData = {
+    title: title,
+    description: description,
+    localUpdatedAt,
+  };
+
+  if (imgUrl !== undefined) {
+    updateData.imgUrl = imgUrl;
+  }
+
+  await articleDoc.update(updateData);
+
+  const updatedArticle = await articleDoc.get();
+
+  res.status(200).json({
+    message: 'Article update successfully',
+    data: {
+      id: updatedArticle.id,
+      ...updatedArticle.data(),
+    },
+  });
+};
+
+module.exports.deleteArticle = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const articleDoc = articleCollection.doc(id);
+    const article = await articleDoc.get();
+
+    if (!article.exists) {
+      return res.status(404).json({
+        message: 'Delete failed, article not found',
+        data: null,
+      });
+    }
+
+    await articleDoc.delete();
+
+    res.status(200).json({
+      message: 'Article deleted successfully',
+      data: {
+        id: article.id,
+        ...article.data(),
+      },
+    });
+  } catch (error) {
+    console.error('Error deleting article:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 };
