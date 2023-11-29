@@ -1,5 +1,6 @@
 const { articleSchema } = require('./schemas');
 const ExpressError = require('./utils/ExpressError');
+const admin = require('firebase-admin');
 
 module.exports.validateArticle = (req, res, next) => {
   const { error } = articleSchema.validate(req.body);
@@ -9,4 +10,21 @@ module.exports.validateArticle = (req, res, next) => {
   } else {
     next();
   }
+};
+
+module.exports.authenticateMiddleware = (req, res, next) => {
+  const sessionCookie = req.cookies.session || '';
+
+  admin
+    .auth()
+    .verifySessionCookie(sessionCookie, true /** checkRevoked */)
+    .then((userData) => {
+      req.userData = userData;
+      next();
+    })
+    .catch(() => {
+      res.status(401).json({
+        message: 'Unauthorized',
+      });
+    });
 };

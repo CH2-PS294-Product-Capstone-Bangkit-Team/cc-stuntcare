@@ -10,12 +10,15 @@ const router = express.Router();
 
 const articles = require('../controllers/articles');
 const catchAsync = require('../utils/catchAsync');
-const { validateArticle } = require('../middleware');
+const { validateArticle, authenticateMiddleware } = require('../middleware');
 
 router
   .route('/')
   .get(catchAsync(articles.index))
   .post(validateArticle, catchAsync(articles.createArticle));
+
+// send get to /articles/secret to test authentication
+router.route('/secret').get(authenticateMiddleware, articles.index);
 
 router
   .route('/:id')

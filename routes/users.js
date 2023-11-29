@@ -18,7 +18,9 @@ const catchAsync = require('../utils/catchAsync');
 
 router.route('/register').post(catchAsync(users.register));
 
-// router.route('/login').post(users.login);
+router.route('/login').get(users.renderLogin).post(users.login);
+
+router.route('/logout').get(users.logout);
 
 // router
 //   .route('/')
