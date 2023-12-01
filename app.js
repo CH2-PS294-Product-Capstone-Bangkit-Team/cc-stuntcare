@@ -12,6 +12,7 @@ const ExpressError = require('./utils/ExpressError');
 
 const userRoutes = require('./routes/users');
 const articleRoutes = require('./routes/articles');
+const childRoutes = require('./routes/child');
 const cookieParser = require('cookie-parser');
 // const reviewRoutes = require('./routes/reviews');
 
@@ -26,6 +27,7 @@ app.use(cookieParser());
 
 app.use('/', userRoutes);
 app.use('/articles', articleRoutes);
+app.use('/child', childRoutes);
 // app.use('/campgrounds/:id/reviews', reviewRoutes);
 
 app.get('/', (req, res) => {
