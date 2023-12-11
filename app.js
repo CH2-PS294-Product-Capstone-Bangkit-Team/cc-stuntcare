@@ -1,7 +1,7 @@
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
-
+const port = process.env.PORT || 8080;
 const express = require('express');
 const path = require('path');
 const admin = require('firebase-admin');
@@ -46,6 +46,6 @@ app.use((err, req, res, next) => {
   res.status(status).json({ status, message });
 });
 
-app.listen(3000, () => {
-  console.log('Server run on 3000');
+app.listen(port, () => {
+  console.log('Server run on ', port);
 });
