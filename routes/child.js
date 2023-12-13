@@ -8,6 +8,7 @@ router.route('/').get(catchAsync(child.index)).post(catchAsync(child.addChild));
 
 router
   .route('/:id')
+  .get(catchAsync(child.showChild))
   .put(catchAsync(child.updateChild))
   .delete(catchAsync(child.deleteChild));
 

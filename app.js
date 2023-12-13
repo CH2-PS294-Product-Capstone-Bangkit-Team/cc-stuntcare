@@ -14,7 +14,6 @@ const userRoutes = require('./routes/users');
 const articleRoutes = require('./routes/articles');
 const childRoutes = require('./routes/child');
 const cookieParser = require('cookie-parser');
-// const reviewRoutes = require('./routes/reviews');
 
 const app = express();
 
@@ -28,7 +27,6 @@ app.use(cookieParser());
 app.use('/', userRoutes);
 app.use('/articles', articleRoutes);
 app.use('/child', childRoutes);
-// app.use('/campgrounds/:id/reviews', reviewRoutes);
 
 app.get('/', (req, res) => {
   res.send('home');
@@ -43,7 +41,7 @@ app.use((err, req, res, next) => {
   if (!err.message) {
     err.message = 'Oh no, Something Went Wrong!';
   }
-  res.status(status).json({ status, message });
+  res.status(status).json({ error: true, message });
 });
 
 app.listen(port, () => {
