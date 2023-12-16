@@ -28,3 +28,15 @@ module.exports.authenticateMiddleware = (req, res, next) => {
       });
     });
 };
+module.exports.verifyToken = async (req, res) => {
+  const idToken = req.body.idToken;
+
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    // Token is valid, and you can get user information from decodedToken
+    res.status(200).json({ success: true, user: decodedToken });
+  } catch (error) {
+    console.error('Error verifying token:', error);
+    res.status(401).json({ success: false, error: 'Invalid token' });
+  }
+};

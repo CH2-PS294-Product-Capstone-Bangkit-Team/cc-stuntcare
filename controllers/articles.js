@@ -1,9 +1,9 @@
 const Firestore = require('@google-cloud/firestore');
-const serviceAccount = require('../cc-stuntcare-demo-f23bdc5f608a.json');
+const serviceAccount = require('../serviceAccountStuntcare.json');
 
 const db = new Firestore({
   projectId: serviceAccount.project_id,
-  keyFilename: './cc-stuntcare-demo-f23bdc5f608a.json',
+  keyFilename: './serviceAccountStuntcare.json',
 });
 
 const articleCollection = db.collection('articles');

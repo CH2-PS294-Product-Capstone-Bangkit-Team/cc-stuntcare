@@ -1,14 +1,3 @@
-//              USERS ROUTES
-// POST /register       register
-//  { email, password, no telfon, nama, status,
-//  tanggal lahir, imageurl }
-// POST /login          add session
-// POST /logout          remove session
-// GET /articles/:id    get one article
-// POST /articles       create article
-// PUT /articles/:id    edit article
-// DELETE /articles/:id delete article
-
 const express = require('express');
 const router = express.Router();
 
@@ -18,9 +7,15 @@ const catchAsync = require('../utils/catchAsync');
 
 router.route('/register').post(catchAsync(users.register));
 
-router.route('/login').get(users.renderLogin).post(users.login);
-
 router.route('/logout').get(users.logout);
+
+router.route('/user').get(catchAsync(users.index));
+
+router
+  .route('/user/:id')
+  .get(catchAsync(users.showParent))
+  .put(catchAsync(users.updateParent))
+  .delete(catchAsync(users.deleteParent));
 
 // router
 //   .route('/')

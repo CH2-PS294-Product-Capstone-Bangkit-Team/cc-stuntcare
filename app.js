@@ -5,7 +5,7 @@ const port = process.env.PORT || 8080;
 const express = require('express');
 const path = require('path');
 const admin = require('firebase-admin');
-const serviceAccount = require('./cc-stuntcare-demo-f23bdc5f608a.json');
+const serviceAccount = require('./serviceAccountStuntcare.json');
 admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
 
 const ExpressError = require('./utils/ExpressError');
@@ -26,7 +26,7 @@ app.use(cookieParser());
 
 app.use('/', userRoutes);
 app.use('/articles', articleRoutes);
-app.use('/child', childRoutes);
+app.use('/user/:userId/child', childRoutes);
 
 app.get('/', (req, res) => {
   res.send('home');

@@ -1,17 +1,18 @@
 const express = require('express');
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
-const child = require('../controllers/child');
+const childController = require('../controllers/child');
 const catchAsync = require('../utils/catchAsync');
 
-router.route('/').get(catchAsync(child.index)).post(catchAsync(child.addChild));
+router
+  .route('/') // Rubah path rute sesuai permintaan Anda
+  .get(catchAsync(childController.index))
+  .post(catchAsync(childController.addChild));
 
 router
-  .route('/:id')
-  .get(catchAsync(child.showChild))
-  .put(catchAsync(child.updateChild))
-  .delete(catchAsync(child.deleteChild));
-
-// router.route('/:id').get(child.)
+  .route('/:id') // Juga di sini
+  .get(catchAsync(childController.showChild))
+  .put(catchAsync(childController.updateChild))
+  .delete(catchAsync(childController.deleteChild));
 
 module.exports = router;
