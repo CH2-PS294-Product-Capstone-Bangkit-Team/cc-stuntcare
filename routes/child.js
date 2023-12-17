@@ -5,12 +5,12 @@ const childController = require('../controllers/child');
 const catchAsync = require('../utils/catchAsync');
 
 router
-  .route('/') // Rubah path rute sesuai permintaan Anda
+  .route('/')
   .get(catchAsync(childController.index))
   .post(catchAsync(childController.addChild));
 
 router
-  .route('/:id') // Juga di sini
+  .route('/:id')
   .get(catchAsync(childController.showChild))
   .put(catchAsync(childController.updateChild))
   .delete(catchAsync(childController.deleteChild));
