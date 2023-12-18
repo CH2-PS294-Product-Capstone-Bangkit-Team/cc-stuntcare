@@ -7,6 +7,15 @@ const db = new Firestore({
   keyFilename: './serviceAccountStuntcare.json',
 });
 
+const { Storage } = require('@google-cloud/storage');
+
+const storage = new Storage({
+  projectId: 'capstone-project-stuntcare',
+  keyFilename: './storageServiceAccount.json',
+});
+
+const bucket = storage.bucket('bucket-capstone-project-stuntcare');
+
 const parentCollection = db.collection('parents');
 const childCollection = db.collection('child');
 const growthCollection = db.collection('growth_history');
@@ -24,6 +33,9 @@ module.exports.register = async (req, res, next) => {
     status,
   } = req.body;
 
+  const defaultImage =
+    'https://storage.googleapis.com/bucket-capstone-project-stuntcare/default-profile-image.jpg';
+
   const userRecord = await admin.auth().createUser({
     email: email,
     password: password,
@@ -38,13 +50,12 @@ module.exports.register = async (req, res, next) => {
     celluler_number: celluler_number,
     status: status,
     firebaseUid: userRecord.uid,
+    image_url: defaultImage,
   });
 
   res.status(201).json({
     error: false,
     message: 'Registration successful!',
-    user: userRecord.toJSON(),
-    parentDocId: parentDoc.id,
   });
 };
 
@@ -53,12 +64,12 @@ module.exports.logout = (req, res, next) => {
   try {
     res.clearCookie('session');
     res.status(200).json({
-      success: true,
+      error: false,
       message: 'Logout successful!',
     });
   } catch (error) {
     res.status(500).json({
-      success: false,
+      error: true,
       message: 'An error occurred during logout.',
     });
   }
@@ -100,6 +111,7 @@ module.exports.showParent = async (req, res) => {
   const parentData = parentDoc.data();
 
   res.status(200).json({
+    error: false,
     message: 'User data received successfully',
     data: {
       id: parentDoc.id,
@@ -132,15 +144,47 @@ module.exports.updateParent = async (req, res) => {
     birth_day: birth_day || existingParentData.birth_day,
     celluler_number: celluler_number || existingParentData.celluler_number,
     status: status || existingParentData.status,
-    updatedAt: Date.now(),
   };
 
-  await parentCollection.doc(id).update(updatedParentData);
+  // Handle profile picture update
+  const imageBuffer = req.file ? req.file.buffer : null;
+  const imageType = req.file ? req.file.mimetype.split('/')[1] : null;
 
-  res.status(201).json({
-    error: false,
-    message: 'User data updated successfully',
-  });
+  if (imageBuffer) {
+    const fileName = `${id}_profile_image.${imageType}`;
+    const file = bucket.file(fileName);
+    const stream = file.createWriteStream();
+
+    stream.on('error', (uploadError) => {
+      return res.status(500).json({
+        error: true,
+        message: 'Error uploading image to Google Cloud Storage',
+      });
+    });
+
+    stream.on('finish', async () => {
+      // Update parent document with new data including image_url
+      await parentCollection.doc(id).update({
+        ...updatedParentData,
+        image_url: `https://storage.googleapis.com/${bucket.name}/${fileName}`,
+      });
+
+      res.status(201).json({
+        error: false,
+        message: 'User data updated successfully',
+      });
+    });
+
+    stream.end(imageBuffer);
+  } else {
+    // If no new image is provided
+    await parentCollection.doc(id).update(updatedParentData);
+
+    res.status(200).json({
+      error: false,
+      message: 'User data updated successfully',
+    });
+  }
 };
 
 //          DELETE USER BY ID
@@ -160,7 +204,7 @@ module.exports.deleteParent = async (req, res) => {
   if (!userId) {
     return res.status(500).json({
       error: true,
-      message: 'User ID not found in Firestore document.',
+      message: 'User ID not found in document.',
     });
   }
 
@@ -184,9 +228,29 @@ module.exports.deleteParent = async (req, res) => {
 
   await Promise.all(deleteChildPromises);
 
+  // Delete the parent document
   await parentCollection.doc(id).delete();
 
+  // Delete the user from Firebase Authentication
   await admin.auth().deleteUser(userId);
+
+  // Delete the profile image from Google Cloud Storage
+  const defaultImageUrl =
+    'https://storage.googleapis.com/bucket-capstone-project-stuntcare/default-profile-image.jpg';
+  const imageUrl = parentDoc.data().image_url;
+  if (imageUrl && imageUrl !== defaultImageUrl) {
+    const fileName = imageUrl.substring(imageUrl.lastIndexOf('/') + 1);
+    const file = bucket.file(fileName);
+
+    try {
+      await file.delete();
+    } catch (deleteError) {
+      return res.status(500).json({
+        error: true,
+        message: 'Error uploading image to Google Cloud Storage ',
+      });
+    }
+  }
 
   res.status(200).json({
     error: false,

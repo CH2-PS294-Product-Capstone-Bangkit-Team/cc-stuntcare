@@ -7,6 +7,9 @@ const path = require('path');
 const admin = require('firebase-admin');
 const serviceAccount = require('./serviceAccountStuntcare.json');
 admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+const multer = require('multer');
+const multerStorage = multer.memoryStorage();
+const upload = multer({ storage: multerStorage });
 
 const ExpressError = require('./utils/ExpressError');
 
@@ -23,6 +26,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
+app.use(upload.single());
 
 app.use('/', userRoutes);
 app.use('/articles', articleRoutes);
