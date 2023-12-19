@@ -16,6 +16,7 @@ const ExpressError = require('./utils/ExpressError');
 const userRoutes = require('./routes/users');
 const articleRoutes = require('./routes/articles');
 const childRoutes = require('./routes/child');
+const doctorRoutes = require('./routes/doctors');
 const cookieParser = require('cookie-parser');
 
 const app = express();
@@ -26,9 +27,10 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
-app.use(upload.single());
+app.use(upload.single('image'));
 
 app.use('/', userRoutes);
+app.use('/doctor', doctorRoutes);
 app.use('/articles', articleRoutes);
 app.use('/user/:userId/child', childRoutes);
 
