@@ -337,6 +337,36 @@ module.exports.deleteChild = async (req, res) => {
 
   await Promise.all(deleteGrowthHistoryPromises);
 
+  const foodHistoryQuerySnapshot = await dailyFoodCollection
+    .where('children_id', '==', childDoc)
+    .get();
+
+  const deleteFoodHistoryPromises = foodHistoryQuerySnapshot.docs.map(
+    async (doc) => {
+      const foodData = doc.data();
+
+      if (foodData.image_url) {
+        const foodFileName = foodData.image_url.substring(
+          foodData.image_url.lastIndexOf('/') + 1
+        );
+        const foodFile = bucket.file(foodFileName);
+
+        try {
+          await foodFile.delete();
+        } catch (deleteError) {
+          console.error(
+            'Error deleting image from Google Cloud Storage:',
+            deleteError
+          );
+        }
+      }
+
+      await doc.ref.delete();
+    }
+  );
+
+  await Promise.all(deleteFoodHistoryPromises);
+
   await childDoc.delete();
 
   if (imageUrl && imageUrl !== defaultImageUrl) {
