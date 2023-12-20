@@ -34,6 +34,8 @@ module.exports.index = async (req, res) => {
       name: childData.name,
       birth_day: childData.birth_day,
       gender: childData.gender,
+      height: childData.height,
+      weight: childData.weight,
       parent_id: userId,
       stunting_status: childData.stunting_status,
       bmi_status: childData.bmi_status,
@@ -78,6 +80,8 @@ module.exports.addChild = async (req, res) => {
     parent_id: parentCollection.doc(userId),
     name,
     gender,
+    height: parsedHeight,
+    weight: parsedWeight,
     birth_day,
     birth_weight: parsedWeight,
     birth_height: parsedHeight,
@@ -188,6 +192,8 @@ module.exports.showChild = async (req, res) => {
     };
   });
 
+  growthHistoryData.sort((a, b) => b.created_at - a.created_at);
+
   res.status(200).json({
     message: 'Child data received successfully',
     data: {
@@ -195,14 +201,12 @@ module.exports.showChild = async (req, res) => {
       parent_id: userId,
       name: childData.name,
       gender: childData.gender,
+      height: childData.height,
+      weight: childData.weight,
       birth_day: childData.birth_day,
       birth_height: childData.birth_height,
       birth_weight: childData.birth_weight,
       growth_history: growthHistoryData,
-      stunting_status: childData.stunting_status,
-      bmi_status: childData.bmi_status,
-      food_recommendation: childData.food_recommendation || [],
-      child_daily_menu: childData.child_daily_menu || [],
       image_url: childData.image_url,
     },
   });
@@ -273,6 +277,8 @@ module.exports.updateChild = async (req, res) => {
       await childDoc.update({
         name: name || existingChildData.name,
         image_url: imageUrl,
+        height: parsedHeight,
+        weight: parsedWeight,
       });
 
       res.status(200).json({
@@ -286,6 +292,8 @@ module.exports.updateChild = async (req, res) => {
     // If no new image is provided
     await childDoc.update({
       name: name || existingChildData.name,
+      height: parsedHeight,
+      weight: parsedWeight,
     });
 
     res.status(200).json({

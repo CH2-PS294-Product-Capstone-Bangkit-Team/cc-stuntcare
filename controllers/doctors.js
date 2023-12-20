@@ -10,18 +10,26 @@ const db = new Firestore({
 const doctorCollection = db.collection('doctors');
 
 module.exports.index = async (req, res) => {
-  const doctorDoc = await doctorCollection.get();
+  const { name } = req.query;
+  let doctorQuery = doctorCollection;
 
-  if (!doctorDoc.docs.length) {
+  // Check if the 'name' query parameter is present
+  if (name) {
+    const searchName = name.replace(name[0], name[0].toUpperCase());
+    doctorQuery = doctorQuery.where('name', '==', searchName);
+  }
+
+  const doctorSnapshot = await doctorQuery.get();
+
+  if (doctorSnapshot.empty) {
     return res.status(404).json({
       error: true,
       message: 'Doctor list is empty',
     });
   }
 
-  const doctor = doctorDoc.docs.map((doc) => {
+  const doctor = doctorSnapshot.docs.map((doc) => {
     const doctorData = doc.data();
-
     return {
       id: doc.id,
       ...doctorData,

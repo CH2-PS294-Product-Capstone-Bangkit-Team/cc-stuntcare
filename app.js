@@ -31,7 +31,8 @@ app.use(upload.single('image'));
 
 app.use('/', userRoutes);
 app.use('/doctor', doctorRoutes);
-app.use('/articles', articleRoutes);
+app.use('/article', articleRoutes);
+// app.use('/user/:userId/articles', articleRoutes);
 app.use('/user/:userId/child', childRoutes);
 
 app.get('/', (req, res) => {
@@ -43,11 +44,11 @@ app.all('*', (req, res, next) => {
 });
 
 app.use((err, req, res, next) => {
-  const { status = 500, message = 'Something went wrong' } = err;
+  const { status = 500, message = 'Something went wrong', stack } = err;
   if (!err.message) {
     err.message = 'Oh no, Something Went Wrong!';
   }
-  res.status(status).json({ error: true, message });
+  res.status(status).json({ error: true, message, stack });
 });
 
 app.listen(port, () => {
