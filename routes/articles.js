@@ -17,10 +17,6 @@ router.route('/').get(catchAsync(articles.index));
 // send get to /articles/secret to test authentication
 // router.route('/secret').get(authenticateMiddleware, articles.index);
 
-router
-  .route('/:id')
-  .get(catchAsync(articles.showArticle))
-
-  .delete(catchAsync(articles.deleteArticle));
+router.route('/:id').get(catchAsync(articles.showArticle));
 
 module.exports = router;

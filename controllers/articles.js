@@ -194,7 +194,7 @@ module.exports.updateArticle = async (req, res) => {
       await articleDoc.update(updateData);
 
       res.status(200).json({
-        message: 'Article updated successfully with new image',
+        message: 'Article updated successfully',
         data: {
           id: article.id,
           ...updateData,
@@ -209,7 +209,7 @@ module.exports.updateArticle = async (req, res) => {
 
     res.status(200).json({
       error: false,
-      message: 'Article updated successfully without changing the image',
+      message: 'Article updated successfully',
     });
   }
 };
@@ -250,10 +250,10 @@ module.exports.deleteArticle = async (req, res) => {
   }
 
   res.status(200).json({
+    error: false,
     message: 'Article deleted successfully',
     data: {
       id: article.id,
-      ...article.data(),
     },
   });
 };

@@ -120,10 +120,6 @@ module.exports.createFood = async (req, res) => {
     res.status(201).json({
       error: false,
       message: 'Daily food menu entry created successfully without image',
-      data: {
-        id: foodId,
-        ...newFoodEntry,
-      },
     });
   }
 };
